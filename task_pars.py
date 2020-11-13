@@ -12,7 +12,7 @@ def get_html(url):
 
 def get_total_pages(html):
     soup = BeautifulSoup(html, 'html.parser')
-    pages = soup.find('div', class_ = 'pager-wrap').find_all('a').get('href')
+    pages = soup.find('div', class_ = 'pager-wrap').find_all('a')[-1].get('href')
     total_page = pages.split('=')[1]
     return int(total_page)
        
@@ -20,38 +20,35 @@ def get_total_pages(html):
 def get_data_page(html):
     soup = BeautifulSoup(html, 'html.parser')
     all_page = soup.find_all('div', class_ = 'item product_listbox')
-    all_info = []
+
 
     for page in all_page:
         try:
-            title = page.find('div', class_ = 'listbox_title').find('a').get('href')
-            title_full = 'https://www.kivano.kg' + title
+            title = page.find('div', class_ = 'listbox_title').find('a').text
         except:
-            title_full = ''
+            title = ''
         try:
-            price = page.find('div', class_ = 'listbox_price').get('strong')
+            price = page.find('div', class_ = 'listbox_price').find('strong')
         except:
             price = ''
         try:
-            img = page.find('div', class_ = 'listbox_img').get('img')
+            img = page.find('div', class_ = 'listbox_img').find('img').get('src')
             img_full = 'https://www.kivano.kg' + img    
         except:
             img_full = ''
         
-        data = {'title': title_full,
+        data = {'title': title,
                 'price': price,
                 'image': img_full
                 }
-        all_info.append(data)
-
         write_csv(data)
+
 
 
 def write_csv(data):
     with open('kivano.csv', 'a') as file:
         writer = csv.writer(file)
-        
-        write.writerow([data['title'],
+        writer.writerow([data['title'],
                         data['price'],
                         data['image']
                         ])
@@ -59,10 +56,11 @@ def write_csv(data):
 
 def main():
     html = get_html(main_url)
-    for page in range(1, get_total_pages):
-
+    num_page = get_total_pages(html)
+    for page in range(1, num_page):
         data_page = get_data_page(html)
-        write_csv(data_page)
+
+        # write_csv(data_page)
 
 
 if __name__ == '__main__':              # точка входа
@@ -121,16 +119,3 @@ if __name__ == '__main__':              # точка входа
 #         links_title.append(full)
 #     return links_price
 
-
-
-# def write_csv(data):
-#     '''записывает на csv файл'''
-#     with open('telefon.csv', 'a') as file:
-#         writer = csv.writer(file)
-#         writer.writerow([data['name'], data['number']])
-#         print([data['name'], data['number']], 'parsed')
-
-
-
-# if __name__ == '__main__':              # точка входа
-#     main()
